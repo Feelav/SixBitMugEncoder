@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
 
 namespace SixBitMugEncoder
 {
@@ -10,41 +11,28 @@ namespace SixBitMugEncoder
 
     public class MugEncoder : IMugEncoder
     {
-        internal static char[] CustomBase64CodePage => new char[] { 
-            '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
-            'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
-            'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W',
-            'X', 'Y', 'Z', '[', '\\', ']', '^', '_',
-            ' ', '!', '"', '#', '$', '%', '&', '\'',
-            '(', ')', '*', '+', ',', '-', '.', '/',
-            '0', '1', '2', '3', '4', '5', '6', '7',
-            '8', '9', ';', ':', '<', '=', '>', '?', (char)21 // default padding character
-        };
-
-        internal static char CustomPaddingCharacter = '|';
 
         private static char[] CodePage;
 
         public MugEncoder(char[] codePage = null, char? paddingCharacter = null)
         {
-            CodePage = codePage ?? CustomBase64CodePage;
-            CodePage[64] = paddingCharacter ?? CustomPaddingCharacter;
+            if(codePage.Length != 65) throw new ArgumentException("CodePage error: Invalid count of characters in codePage.");
+
+            if (paddingCharacter != null & codePage.Any(x => x == paddingCharacter)) throw new ArgumentException("Padding cahracter error: character contained in the codePage.");
+
+            CodePage = codePage ?? CodePages.CustoBBSmBase64CodePage;
+            CodePage[64] = paddingCharacter ?? CodePages.DefaultPaddingCharacter;
         }
 
         public string ToCustomBase64(string hexValue)
         {
-
             _ = hexValue ?? throw new ArgumentNullException(nameof(hexValue));
 
             var inData = HexToBytes(hexValue);
-
             char[] base64 = CodePage;
-
             int lengthmod3 = inData.Length % 3;
             int calcLength = inData.Length - lengthmod3;
-
             char[] outChars = new char[calcLength / 3 * 4 + (lengthmod3 == 2 || lengthmod3 == 1 ? 4 : 0)];
-
             int i;
             int j = 0;
 
